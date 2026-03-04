@@ -23,3 +23,7 @@ htmlcov/
 
 # Local vector store/runtime data
 qdrant_storage/
+
+# Frontend upload artifacts
+frontend/uploads/
+frontend/**/uploads/

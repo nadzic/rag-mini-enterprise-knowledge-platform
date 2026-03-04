@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 inngest_client = inngest.Inngest(
-    app_id="rag-enterprise-knowledge-platform",
+    app_id="rag-mini-enterprise-knowledge-platform",
     logger=logging.getLogger("uvicorn"),
     is_production=False,
     serializer=inngest.PydanticSerializer(),

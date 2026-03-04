@@ -1,12 +1,14 @@
+# pyright: reportMissingImports=false, reportMissingModuleSource=false
+
 import asyncio
+import os
 from pathlib import Path
 import time
 
-import streamlit as st
 import inngest
-from dotenv import load_dotenv
-import os
 import requests
+import streamlit as st
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -16,7 +18,10 @@ st.set_page_config(page_title="RAG Ingest PDF", page_icon="📄", layout="center
 def get_inngest_client() -> inngest.Inngest:
     # Create a fresh client per call to avoid reusing async state
     # across Streamlit reruns/event loops.
-    return inngest.Inngest(app_id="rag_app", is_production=False)
+    return inngest.Inngest(
+        app_id="rag-mini-enterprise-knowledge-platform",
+        is_production=False,
+    )
 
 
 def save_uploaded_pdf(file) -> Path:
@@ -58,11 +63,12 @@ st.divider()
 st.title("Ask a question about your PDFs")
 
 
-async def send_rag_query_event(question: str, top_k: int) -> None:
+async def send_rag_query_event(question: str, top_k: int) -> str:
     client = get_inngest_client()
     result = await client.send(
         inngest.Event(
-            name="rag/query_pdf_ai",
+            # Must match trigger in `inngest_functions/query_pdf.py`.
+            name="rag/query",
             data={
                 "question": question,
                 "top_k": top_k,
