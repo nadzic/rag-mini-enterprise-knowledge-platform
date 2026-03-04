@@ -1,6 +1,6 @@
 # RAG Mini Enterprise Knowledge Platform
 
-Production-style backend for document-grounded Q&A using Retrieval-Augmented Generation (RAG).  
+Production-style backend for document-grounded Q&A using Retrieval-Augmented Generation (RAG), with a Streamlit frontend for ingestion and querying.  
 This project ingests PDF documents, stores semantic vectors in Qdrant, and answers questions using only retrieved context.
 
 ## Why This Project
@@ -37,6 +37,7 @@ This codebase demonstrates a practical RAG workflow with:
 - **LLM + Embeddings:** OpenAI API (`gpt-4o-mini`, `text-embedding-3-large`)
 - **Document Processing:** `pypdf`, `llama-index`
 - **Validation/Types:** Pydantic
+- **Frontend/UI:** Streamlit
 - **Testing:** Pytest, pytest-asyncio
 - **Tooling:** uv
 
@@ -59,6 +60,7 @@ inngest_functions/   # event-driven workflows (ingest + query)
 services/            # core logic (embeddings, PDF chunking, vector store)
 rag_types/           # exported Pydantic models
 tests/               # unit tests with mocks/fakes
+frontend/            # Streamlit UI (upload + ask)
 main.py              # FastAPI app bootstrap
 ```
 
@@ -99,6 +101,13 @@ docker run -p 6333:6333 qdrant/qdrant
 uv run uvicorn main:app --reload
 ```
 
+### 5) Run the Streamlit UI
+
+```bash
+cd frontend
+uv run streamlit run ./streamlit_app.py
+```
+
 ## Testing
 
 Run the unit tests:
@@ -126,5 +135,5 @@ Current baseline includes tests for:
 - Add auth + multi-tenant metadata filtering.
 - Add reranking and citation span extraction.
 - Add ingestion status tracking and retries dashboard.
-- Add a lightweight UI (Streamlit/web) for end-user querying.
+- Improve the Streamlit UI/UX and add richer query history.
 
