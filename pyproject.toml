@@ -1,0 +1,28 @@
+[project]
+name = "rag-enterprise-knowledge-platform"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.9,<3.14"
+dependencies = [
+    "fastapi>=0.128.8",
+    "inngest",
+    "llama-index-core",
+    "llama-index-readers-file",
+    "openai",
+    "python-dotenv",
+    "qdrant-client",
+    "streamlit",
+    "uvicorn",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.0",
+    "pytest-asyncio>=1.1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q"

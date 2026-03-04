@@ -1,0 +1,130 @@
+# RAG Mini Enterprise Knowledge Platform
+
+Production-style backend for document-grounded Q&A using Retrieval-Augmented Generation (RAG).  
+This project ingests PDF documents, stores semantic vectors in Qdrant, and answers questions using only retrieved context.
+
+## Why This Project
+
+Enterprise teams need trustworthy answers from internal documentation, not generic LLM output.  
+This codebase demonstrates a practical RAG workflow with:
+
+- event-driven ingestion and query orchestration (`Inngest`)
+- clean service boundaries for embeddings, chunking, and vector search
+- typed contracts for pipeline steps (`Pydantic` models in `rag_types`)
+- unit testing with mocked external dependencies (`pytest`)
+
+## What It Does
+
+### 1) Ingest PDF (`rag/ingest_pdf`)
+
+- loads and chunks a PDF (`services/pdf_loader.py`)
+- generates embeddings for each chunk (`services/embeddings.py`)
+- upserts vectors and metadata into Qdrant (`services/vector_store.py`)
+
+### 2) Query (`rag/query`)
+
+- embeds the user question
+- retrieves top-k relevant contexts from Qdrant
+- sends grounded context to the LLM
+- returns answer + sources + context count
+
+## Tech Stack
+
+- **Language:** Python 3.11
+- **API Runtime:** FastAPI
+- **Event Orchestration:** Inngest
+- **Vector DB:** Qdrant
+- **LLM + Embeddings:** OpenAI API (`gpt-4o-mini`, `text-embedding-3-large`)
+- **Document Processing:** `pypdf`, `llama-index`
+- **Validation/Types:** Pydantic
+- **Testing:** Pytest, pytest-asyncio
+- **Tooling:** uv
+
+## Architecture (High-Level)
+
+```text
+PDF -> Chunk -> Embed -> Qdrant (upsert)
+Question -> Embed -> Qdrant (search) -> LLM (grounded prompt) -> Answer + Sources
+```
+
+The app is served from `main.py`, which wires FastAPI + Inngest functions:
+
+- `rag_ingest_pdf` in `inngest_functions/ingest_pdf.py`
+- `rag_query_pdf_ai` in `inngest_functions/query_pdf.py`
+
+## Project Structure
+
+```text
+inngest_functions/   # event-driven workflows (ingest + query)
+services/            # core logic (embeddings, PDF chunking, vector store)
+rag_types/           # exported Pydantic models
+tests/               # unit tests with mocks/fakes
+main.py              # FastAPI app bootstrap
+```
+
+## Local Setup
+
+### Prerequisites
+
+- Python 3.11
+- [uv](https://docs.astral.sh/uv/)
+- Docker (recommended for local Qdrant)
+- OpenAI API key
+
+### 1) Install dependencies
+
+```bash
+uv sync --group dev
+```
+
+### 2) Configure environment
+
+Create `.env` with:
+
+```bash
+OPENAI_API_KEY=your_key_here
+```
+
+(`OPEN_AI_KEY` and `OPENAI_KEY` are also supported as fallbacks.)
+
+### 3) Start Qdrant locally
+
+```bash
+docker run -p 6333:6333 qdrant/qdrant
+```
+
+### 4) Run the API
+
+```bash
+uv run uvicorn main:app --reload
+```
+
+## Testing
+
+Run the unit tests:
+
+```bash
+uv run --group dev pytest
+```
+
+Current baseline includes tests for:
+
+- `rag_types` model validation
+- `embed_texts` behavior (mocked OpenAI client)
+- `QdrantVectorStore` init/upsert/search behavior (fake Qdrant client)
+
+## Engineering Decisions
+
+- **Event-driven workflows:** Ingestion and query are explicit, observable functions.
+- **Typed boundaries:** Pydantic models make step input/output contracts clear.
+- **Deterministic IDs for chunks:** UUID5 (`source_id:index`) avoids duplicate collisions.
+- **Dependency isolation in tests:** External services are mocked/faked for fast, reliable CI.
+
+## Trade-offs / Next Improvements
+
+- Add integration tests against a real local Qdrant container.
+- Add auth + multi-tenant metadata filtering.
+- Add reranking and citation span extraction.
+- Add ingestion status tracking and retries dashboard.
+- Add a lightweight UI (Streamlit/web) for end-user querying.
+
