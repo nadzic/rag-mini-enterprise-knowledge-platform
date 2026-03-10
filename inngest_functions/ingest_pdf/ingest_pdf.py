@@ -3,7 +3,7 @@ import inngest
 from rag_types import RAGChunkAndSource, RAGUpsertResult
 from services.langfuse_client import flush_langfuse
 
-from .client import inngest_client
+from ..client import inngest_client
 from .ingest_pdf_finalize_failure import finalize_failure
 from .ingest_pdf_load import load_chunks_and_source
 from .ingest_pdf_start_span import start_root_span

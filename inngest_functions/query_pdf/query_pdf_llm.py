@@ -1,7 +1,7 @@
 import inngest
 from inngest.experimental import ai
 
-from .env import get_openai_api_key
+from ..env import get_openai_api_key
 
 
 def build_user_prompt(question: str, contexts: list[str]) -> str:

@@ -1,4 +1,5 @@
-from typing import Any
+import hashlib
+from typing import Any, cast
 
 import inngest
 
@@ -10,7 +11,14 @@ def start_root_span(ctx: inngest.Context) -> Any:
     langfuse = get_langfuse_client()
     if langfuse is None:
         return None
+    event_id = str(getattr(ctx.event, "id", ""))
+    trace_context = (
+        cast(Any, {"trace_id": hashlib.md5(event_id.encode("utf-8")).hexdigest()})
+        if event_id
+        else None
+    )
     return langfuse.start_span(
+        trace_context=trace_context,
         name="rag.ingest_pdf",
         input={
             "pdf_path": str(ctx.event.data.get("pdf_path", "")),
@@ -18,6 +26,6 @@ def start_root_span(ctx: inngest.Context) -> Any:
         },
         metadata={
             "event_name": "rag/ingest_pdf",
-            "event_id": str(getattr(ctx.event, "id", "")),
+            "event_id": event_id,
         },
     )

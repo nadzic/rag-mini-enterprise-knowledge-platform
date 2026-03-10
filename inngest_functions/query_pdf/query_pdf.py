@@ -3,10 +3,12 @@ import inngest
 from rag_types import RAGQueryResult, RAGSearchResult
 from services.langfuse_client import flush_langfuse
 
-from .client import inngest_client
+from ..client import inngest_client
+from .query_pdf_finalize_failure import finalize_failure
 from .query_pdf_llm import build_user_prompt, extract_answer, infer_answer
+from .query_pdf_parse_inputs import parse_query_inputs
 from .query_pdf_search import search_contexts
-from .query_pdf_tracing import finalize_failure, parse_query_inputs, start_root_span
+from .query_pdf_start_span import start_root_span
 
 
 @inngest_client.create_function(
