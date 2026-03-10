@@ -1,12 +1,12 @@
 import inngest
-from inngest.experimental import ai
 
 from rag_types import RAGQueryResult, RAGSearchResult
-from services import QdrantVectorStore, embed_texts
-from services.langfuse_client import flush_langfuse, get_langfuse_client
+from services.langfuse_client import flush_langfuse
 
 from .client import inngest_client
-from .env import get_openai_api_key
+from .query_pdf_llm import build_user_prompt, extract_answer, infer_answer
+from .query_pdf_search import search_contexts
+from .query_pdf_tracing import finalize_failure, parse_query_inputs, start_root_span
 
 
 @inngest_client.create_function(
@@ -14,34 +14,14 @@ from .env import get_openai_api_key
     trigger=inngest.TriggerEvent(event="rag/query"),
 )
 async def rag_query_pdf_ai(ctx: inngest.Context) -> dict:
-    def _search(question: str, top_k: int = 5) -> RAGSearchResult:
-        query_vec = embed_texts([question])[0]
-        store = QdrantVectorStore()
-        found = store.search(query_vec, top_k)
-        return RAGSearchResult(contexts=found["contexts"], sources=found["sources"])
-
-    question = str(ctx.event.data["question"])
-    top_k_raw = ctx.event.data.get("top_k", 5)
-    top_k = int(top_k_raw) if isinstance(top_k_raw, (int, float, str)) else 5
-
-    langfuse = get_langfuse_client()
-    root_span = None
-    if langfuse is not None:
-        root_span = langfuse.start_span(
-            name="rag.query",
-            input={"question": question, "top_k": top_k},
-            metadata={
-                "event_name": "rag/query",
-                "event_id": str(getattr(ctx.event, "id", "")),
-                "user_id": str(ctx.event.data.get("user_id", "")),
-                "session_id": str(ctx.event.data.get("session_id", "")),
-            },
-        )
+    """Orchestrate retrieval + generation and return a JSON-safe query result."""
+    question, top_k = parse_query_inputs(ctx)
+    root_span = start_root_span(ctx, question, top_k)
 
     search_span = root_span.start_span(name="embed-and-search") if root_span else None
     try:
         async def _search_step() -> RAGSearchResult:
-            return _search(question, top_k)
+            return search_contexts(question, top_k)
 
         found = await ctx.step.run(
             "embed-and-search",
@@ -53,30 +33,13 @@ async def rag_query_pdf_ai(ctx: inngest.Context) -> dict:
                 output={"num_contexts": len(found.contexts), "num_sources": len(found.sources)}
             )
     except Exception as exc:
-        if search_span is not None:
-            search_span.update(level="ERROR", status_message=str(exc))
-            search_span.end()
-        if root_span is not None:
-            root_span.update(level="ERROR", status_message=str(exc))
-            root_span.end()
-        flush_langfuse()
+        finalize_failure(root_span, search_span, exc)
         raise
     else:
         if search_span is not None:
             search_span.end()
 
-    context_block = "\n\n".join(f"- {c}" for c in found.contexts)
-    user_content = (
-        "Use the following context to answer the question.\n\n"
-        f"Context:\n{context_block}\n\n"
-        f"Question: {question}\n"
-        "Answer concisely using the context above."
-    )
-
-    adapter = ai.openai.Adapter(
-        auth_key=get_openai_api_key(),
-        model="gpt-4o-mini",
-    )
+    user_content = build_user_prompt(question, found.contexts)
 
     generation = (
         root_span.start_generation(
@@ -88,37 +51,14 @@ async def rag_query_pdf_ai(ctx: inngest.Context) -> dict:
         else None
     )
     try:
-        res = await ctx.step.ai.infer(
-            "llm-answer",
-            adapter=adapter,
-            body={
-                "max_tokens": 1024,
-                "temperature": 0.2,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "You answer questions based on the provided context.",
-                    },
-                    {"role": "user", "content": user_content},
-                ],
-            },
-        )
+        res = await infer_answer(ctx, user_content)
     except Exception as exc:
         if generation is not None:
             generation.update(level="ERROR", status_message=str(exc))
-            generation.end()
-        if root_span is not None:
-            root_span.update(level="ERROR", status_message=str(exc))
-            root_span.end()
-        flush_langfuse()
+        finalize_failure(root_span, generation, exc)
         raise
 
-    res_data = res if isinstance(res, dict) else {}
-    raw_choices = res_data.get("choices", [])
-    choices = raw_choices if isinstance(raw_choices, list) else []
-    first_choice = choices[0] if choices and isinstance(choices[0], dict) else {}
-    message = first_choice.get("message", {}) if isinstance(first_choice, dict) else {}
-    answer = str(message.get("content", "")).strip()
+    answer = extract_answer(res)
     result = RAGQueryResult(
         answer=answer,
         sources=found.sources,
