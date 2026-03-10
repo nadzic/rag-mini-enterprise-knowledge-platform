@@ -147,7 +147,11 @@ Current baseline includes tests for:
 
 - Add integration tests against a real local Qdrant container.
 - Add auth + multi-tenant metadata filtering.
+- Add a reranker to improve retrieval quality before answer generation.
 - Add reranking and citation span extraction.
+- Add prompt management/versioning in Langfuse for LLM prompts.
+- Test different chunk sizes and chunk overlaps, then compare retrieval/answer quality.
+- Test different embedding models and compare quality/cost/latency trade-offs.
 - Add ingestion status tracking and retries dashboard.
 - Improve the Streamlit UI/UX and add richer query history.
 
