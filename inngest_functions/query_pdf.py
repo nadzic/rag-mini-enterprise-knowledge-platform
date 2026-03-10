@@ -1,6 +1,5 @@
 import inngest
 from inngest.experimental import ai
-from typing import Any
 
 from rag_types import RAGQueryResult, RAGSearchResult
 from services import QdrantVectorStore, embed_texts
@@ -14,7 +13,7 @@ from .env import get_openai_api_key
     fn_id="RAG: Query",
     trigger=inngest.TriggerEvent(event="rag/query"),
 )
-async def rag_query_pdf_ai(ctx: inngest.Context) -> RAGQueryResult:
+async def rag_query_pdf_ai(ctx: inngest.Context) -> dict:
     def _search(question: str, top_k: int = 5) -> RAGSearchResult:
         query_vec = embed_texts([question])[0]
         store = QdrantVectorStore()
@@ -34,13 +33,9 @@ async def rag_query_pdf_ai(ctx: inngest.Context) -> RAGQueryResult:
             metadata={
                 "event_name": "rag/query",
                 "event_id": str(getattr(ctx.event, "id", "")),
+                "user_id": str(ctx.event.data.get("user_id", "")),
+                "session_id": str(ctx.event.data.get("session_id", "")),
             },
-        )
-        user_id = ctx.event.data.get("user_id")
-        session_id = ctx.event.data.get("session_id")
-        langfuse.update_current_trace(
-            user_id=str(user_id) if user_id else None,
-            session_id=str(session_id) if session_id else None,
         )
 
     search_span = root_span.start_span(name="embed-and-search") if root_span else None
@@ -139,4 +134,5 @@ async def rag_query_pdf_ai(ctx: inngest.Context) -> RAGQueryResult:
         root_span.update(output=result.model_dump())
         root_span.end()
     flush_langfuse()
-    return result
+    # Inngest expects JSON-serializable return payloads.
+    return result.model_dump()
