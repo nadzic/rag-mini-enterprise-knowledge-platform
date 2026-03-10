@@ -152,6 +152,7 @@ Current baseline includes tests for:
 - Add prompt management/versioning in Langfuse for LLM prompts.
 - Test different chunk sizes and chunk overlaps, then compare retrieval/answer quality.
 - Test different embedding models and compare quality/cost/latency trade-offs.
+- Add hybrid search (vector + BM25/keyword) and compare against pure vector retrieval.
 - Add ingestion status tracking and retries dashboard.
 - Improve the Streamlit UI/UX and add richer query history.
 
