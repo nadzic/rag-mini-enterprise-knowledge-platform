@@ -1,14 +1,14 @@
 from llama_index.core.node_parser import SentenceSplitter
 from pypdf import PdfReader
+from llama_index.readers.file import PDFReader
+from pathlib import Path
 
 splitter = SentenceSplitter(chunk_size=1000, chunk_overlap=200)
 
 def load_and_chunk_pdf(path: str) -> list[str]:
     texts: list[str] = []
     try:
-        from llama_index.readers.file import PDFReader
-
-        docs = PDFReader().load_data(file=path)
+        docs = PDFReader().load_data(file=Path(path))
         texts = [d.text for d in docs if getattr(d, "text", None)]
     except ModuleNotFoundError:
         # Fallback when optional llama-index reader package is missing.

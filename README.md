@@ -9,6 +9,7 @@ Enterprise teams need trustworthy answers from internal documentation, not gener
 This codebase demonstrates a practical RAG workflow with:
 
 - event-driven ingestion and query orchestration (`Inngest`)
+- end-to-end observability with traces/spans (`Langfuse`)
 - clean service boundaries for embeddings, chunking, and vector search
 - typed contracts for pipeline steps (`Pydantic` models in `rag_types`)
 - unit testing with mocked external dependencies (`pytest`)
@@ -33,6 +34,7 @@ This codebase demonstrates a practical RAG workflow with:
 - **Language:** Python 3.11
 - **API Runtime:** FastAPI
 - **Event Orchestration:** Inngest
+- **Observability:** Langfuse
 - **Vector DB:** Qdrant
 - **LLM + Embeddings:** OpenAI API (`gpt-4o-mini`, `text-embedding-3-large`)
 - **Document Processing:** `pypdf`, `llama-index`
@@ -85,9 +87,21 @@ Create `.env` with:
 
 ```bash
 OPENAI_API_KEY=your_key_here
+LANGFUSE_PUBLIC_KEY=your_langfuse_public_key
+LANGFUSE_SECRET_KEY=your_langfuse_secret_key
+LANGFUSE_HOST=https://cloud.langfuse.com
 ```
 
 (`OPEN_AI_KEY` and `OPENAI_KEY` are also supported as fallbacks.)
+If Langfuse keys are not set, tracing is skipped and the app still runs normally.
+
+## Observability (Langfuse)
+
+Langfuse tracing is integrated in:
+
+- `inngest_functions/query_pdf.py` for query spans and LLM generation tracing
+- `inngest_functions/ingest_pdf.py` for ingestion pipeline spans
+- `services/langfuse_client.py` for shared Langfuse client initialization and flushing
 
 ### 3) Start Qdrant locally
 
