@@ -1,6 +1,7 @@
 # pyright: reportMissingImports=false, reportMissingModuleSource=false
 
 import asyncio
+import hashlib
 import os
 from pathlib import Path
 import time
@@ -50,14 +51,22 @@ st.title("Upload a PDF to Ingest")
 uploaded = st.file_uploader("Choose a PDF", type=["pdf"], accept_multiple_files=False)
 
 if uploaded is not None:
-    with st.spinner("Uploading and triggering ingestion..."):
-        path = save_uploaded_pdf(uploaded)
-        # Kick off the event and block until the send completes
-        asyncio.run(send_rag_ingest_event(path))
-        # Small pause for user feedback continuity
-        time.sleep(0.3)
-    st.success(f"Triggered ingestion for: {path.name}")
-    st.caption("You can upload another PDF if you like.")
+    file_bytes = uploaded.getvalue()
+    upload_fingerprint = hashlib.sha256(file_bytes).hexdigest()
+    last_ingest_fingerprint = st.session_state.get("last_ingest_fingerprint")
+
+    if last_ingest_fingerprint != upload_fingerprint:
+        with st.spinner("Uploading and triggering ingestion..."):
+            path = save_uploaded_pdf(uploaded)
+            # Kick off the event and block until the send completes
+            asyncio.run(send_rag_ingest_event(path))
+            st.session_state["last_ingest_fingerprint"] = upload_fingerprint
+            # Small pause for user feedback continuity
+            time.sleep(0.3)
+        st.success(f"Triggered ingestion for: {path.name}")
+        st.caption("You can upload another PDF if you like.")
+    else:
+        st.info(f"Ingestion already triggered for: {uploaded.name}")
 
 st.divider()
 st.title("Ask a question about your PDFs")
