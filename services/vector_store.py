@@ -99,6 +99,23 @@ class QdrantVectorStore:
         sparse_query_vector: SparseVector | None = None,
         prefetch_k: int | None = None,
     ) -> dict[str, list[str]]:
+        records = self.search_records(
+            query_vector=query_vector,
+            top_k=top_k,
+            sparse_query_vector=sparse_query_vector,
+            prefetch_k=prefetch_k,
+        )
+        contexts = [record["text"] for record in records if record.get("text")]
+        sources = sorted({record["source"] for record in records if record.get("source")})
+        return {"contexts": contexts, "sources": sources}
+
+    def search_records(
+        self,
+        query_vector: list[float],
+        top_k: int = 5,
+        sparse_query_vector: SparseVector | None = None,
+        prefetch_k: int | None = None,
+    ) -> list[dict[str, str]]:
         candidate_limit = prefetch_k or max(top_k * 3, top_k)
         try:
             if sparse_query_vector is not None:
@@ -144,17 +161,11 @@ class QdrantVectorStore:
                 with_payload=True,
                 limit=top_k,
             )
-        results = response.points
-
-        contexts: list[str] = []
-        sources: set[str] = set()
-        for result in results:
+        records: list[dict[str, str]] = []
+        for result in response.points:
             payload = getattr(result, "payload", None) or {}
-            text = payload.get("text", "")
-            source = payload.get("source", "")
-            if text:
-                contexts.append(text)
-            if source:
-                sources.add(source)
-
-        return {"contexts": contexts, "sources": sorted(sources)}
+            text = str(payload.get("text", "") or "")
+            source = str(payload.get("source", "") or "")
+            if text or source:
+                records.append({"text": text, "source": source})
+        return records

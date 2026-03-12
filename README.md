@@ -90,10 +90,14 @@ OPENAI_API_KEY=your_key_here
 LANGFUSE_PUBLIC_KEY=your_langfuse_public_key
 LANGFUSE_SECRET_KEY=your_langfuse_secret_key
 LANGFUSE_HOST=https://cloud.langfuse.com
+RERANK_ENABLED=true
+RERANK_TOP_N=20
+RERANK_MODEL=cross-encoder/ms-marco-MiniLM-L-6-v2
 ```
 
 (`OPEN_AI_KEY` and `OPENAI_KEY` are also supported as fallbacks.)
 If Langfuse keys are not set, tracing is skipped and the app still runs normally.
+If reranker env vars are omitted or `RERANK_ENABLED=false`, query flow falls back to non-reranked retrieval.
 
 ## Observability (Langfuse)
 
@@ -159,14 +163,10 @@ Current baseline includes tests for:
 
 ## Trade-offs / Next Improvements
 
-- Add integration tests against a real local Qdrant container.
 - Add auth + multi-tenant metadata filtering.
-- Add a reranker to improve retrieval quality before answer generation.
-- Add reranking and citation span extraction.
 - Add prompt management/versioning in Langfuse for LLM prompts.
 - Test different chunk sizes and chunk overlaps, then compare retrieval/answer quality.
 - Test different embedding models and compare quality/cost/latency trade-offs.
-- Add hybrid search (vector + BM25/keyword) and compare against pure vector retrieval.
 - Add ingestion status tracking and retries dashboard.
 - Improve the Streamlit UI/UX and add richer query history.
 

@@ -1,5 +1,12 @@
 from rag_types import RAGSearchResult
-from services import BM25SparseEncoder, QdrantVectorStore, embed_texts
+from services import (
+    BM25SparseEncoder,
+    QdrantVectorStore,
+    embed_texts,
+    rerank_enabled,
+    rerank_records,
+    rerank_top_n,
+)
 
 
 def search_contexts(question: str, top_k: int = 5) -> RAGSearchResult:
@@ -10,11 +17,18 @@ def search_contexts(question: str, top_k: int = 5) -> RAGSearchResult:
     sparse_encoder.fit([question])
     sparse_query_vec = sparse_encoder.encode_query(question)
 
+    first_stage_k = max(top_k, rerank_top_n()) if rerank_enabled() else top_k
+
     store = QdrantVectorStore()
-    found = store.search(
+    records = store.search_records(
         dense_query_vec,
-        top_k=top_k,
+        top_k=first_stage_k,
         sparse_query_vector=sparse_query_vec,
-        prefetch_k=max(top_k * 3, top_k),
+        prefetch_k=max(first_stage_k * 3, first_stage_k),
     )
-    return RAGSearchResult(contexts=found["contexts"], sources=found["sources"])
+
+    text_records = [record for record in records if record.get("text")]
+    selected_records = rerank_records(question, text_records, top_k=top_k)
+    contexts = [record["text"] for record in selected_records if record.get("text")]
+    sources = sorted({record["source"] for record in selected_records if record.get("source")})
+    return RAGSearchResult(contexts=contexts, sources=sources)

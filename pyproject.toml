@@ -13,6 +13,7 @@ dependencies = [
     "openai",
     "python-dotenv",
     "qdrant-client",
+    "sentence-transformers>=5.1.2",
     "streamlit",
     "uvicorn",
 ]
