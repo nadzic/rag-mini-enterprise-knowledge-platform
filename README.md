@@ -115,7 +115,21 @@ docker run -p 6333:6333 qdrant/qdrant
 uv run uvicorn main:app --reload
 ```
 
-### 5) Run the Streamlit UI
+### 5) Run Inngest Dev Server
+
+In a separate terminal, start Inngest and point it to your local FastAPI handler:
+
+```bash
+npx inngest-cli@latest dev -u http://127.0.0.1:8000/api/inngest --no-discovery
+```
+
+Local ingest/query dev flow uses 3 running processes:
+
+1. Qdrant (`docker run -p 6333:6333 qdrant/qdrant`)
+2. API (`uv run uvicorn main:app --reload`)
+3. Inngest Dev Server (`npx inngest-cli@latest dev -u http://127.0.0.1:8000/api/inngest --no-discovery`)
+
+### 6) Run the Streamlit UI
 
 ```bash
 cd frontend
