@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from langfuse import Langfuse
 
-load_dotenv()
+_ = load_dotenv()
 
 _langfuse_client: Langfuse | None = None
 _langfuse_initialized = False

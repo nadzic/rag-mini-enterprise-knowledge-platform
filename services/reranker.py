@@ -5,7 +5,7 @@ from typing import Sequence
 
 from dotenv import load_dotenv
 
-load_dotenv()
+_ = load_dotenv()
 
 _reranker_model = None
 

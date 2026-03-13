@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from services.openai_api_key import resolve_openai_api_key
 
-load_dotenv()
+_ = load_dotenv()
 
 EMBED_MODEL = "text-embedding-3-large"
 client: OpenAI | None = None

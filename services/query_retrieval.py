@@ -13,7 +13,6 @@ def search_contexts(question: str, top_k: int = 5) -> RAGSearchResult:
     """Run hybrid retrieval (dense + BM25 sparse) and return top contexts."""
     dense_query_vec = embed_texts([question])[0]
     sparse_encoder = BM25SparseEncoder()
-    # Fit on the query to obtain BM25-style sparse query weights.
     sparse_encoder.fit([question])
     sparse_query_vec = sparse_encoder.encode_query(question)
 

@@ -18,8 +18,8 @@ from qdrant_client.models import (
 
 class QdrantVectorStore:
     """Thin adapter around Qdrant for upsert + semantic search."""
-    DENSE_VECTOR_NAME = "dense"
-    SPARSE_VECTOR_NAME = "sparse"
+    DENSE_VECTOR_NAME: str = "dense"
+    SPARSE_VECTOR_NAME: str = "sparse"
 
     def __init__(
         self,
