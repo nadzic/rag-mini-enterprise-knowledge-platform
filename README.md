@@ -128,6 +128,17 @@ cd api_service/src/api
 uv run uvicorn main:app --reload --port 8001
 ```
 
+#### Example query call (FastAPI / Postman equivalent)
+
+```bash
+curl -X POST "http://127.0.0.1:8001/api/rag/query" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "How does this FastAPI backend work?",
+    "top_k": 5
+  }'
+```
+
 ### 5) Run Inngest Dev Server
 
 In a separate terminal, start Inngest and point it to your local FastAPI handler:
@@ -178,4 +189,8 @@ Current baseline includes tests for:
 - Test different embedding models and compare quality/cost/latency trade-offs.
 - Add ingestion status tracking and retries dashboard.
 - Improve the Streamlit UI/UX and add richer query history.
+
+## TODO
+
+- Authentication and authorization for protected API access.
 

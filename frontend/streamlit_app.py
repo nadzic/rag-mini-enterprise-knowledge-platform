@@ -1,5 +1,7 @@
 # pyright: reportMissingImports=false, reportMissingModuleSource=false
 
+from requests.models import Response
+
 import asyncio
 import hashlib
 import os
@@ -11,10 +13,9 @@ import requests
 import streamlit as st
 from dotenv import load_dotenv
 
-load_dotenv()
+_ = load_dotenv()
 
 st.set_page_config(page_title="RAG Ingest PDF", page_icon="📄", layout="centered")
-
 
 def get_inngest_client() -> inngest.Inngest:
     # Create a fresh client per call to avoid reusing async state
@@ -23,7 +24,6 @@ def get_inngest_client() -> inngest.Inngest:
         app_id="rag-mini-enterprise-knowledge-platform",
         is_production=False,
     )
-
 
 def save_uploaded_pdf(file) -> Path:
     uploads_dir = Path("uploads")
@@ -63,13 +63,13 @@ if uploaded is not None:
             st.session_state["last_ingest_fingerprint"] = upload_fingerprint
             # Small pause for user feedback continuity
             time.sleep(0.3)
-        st.success(f"Triggered ingestion for: {path.name}")
-        st.caption("You can upload another PDF if you like.")
+        _ = st.success(f"Triggered ingestion for: {path.name}")
+        _ = st.caption("You can upload another PDF if you like.")
     else:
-        st.info(f"Ingestion already triggered for: {uploaded.name}")
+        _ = st.info(f"Ingestion already triggered for: {uploaded.name}")
 
-st.divider()
-st.title("Ask a question about your PDFs")
+_ = st.divider()
+_ = st.title("Ask a question about your PDFs")
 
 
 async def send_rag_query_event(question: str, top_k: int) -> str:
@@ -95,7 +95,7 @@ def _inngest_api_base() -> str:
 
 def fetch_runs(event_id: str) -> list[dict]:
     url = f"{_inngest_api_base()}/events/{event_id}/runs"
-    resp = requests.get(url)
+    resp: Response = requests.get(url)
     resp.raise_for_status()
     data = resp.json()
     return data.get("data", [])

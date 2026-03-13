@@ -14,11 +14,9 @@ _MAX_TERM_ID = (2**31) - 1
 def _tokenize(text: str) -> list[str]:
     return _TOKEN_PATTERN.findall(text.lower())
 
-
 def _term_id(token: str) -> int:
     digest = hashlib.blake2b(token.encode("utf-8"), digest_size=8).digest()
     return int.from_bytes(digest, byteorder="big", signed=False) % _MAX_TERM_ID
-
 
 def _to_sparse_vector(weights: dict[int, float]) -> SparseVector:
     if not weights:
@@ -28,7 +26,6 @@ def _to_sparse_vector(weights: dict[int, float]) -> SparseVector:
         indices=[item[0] for item in sorted_items],
         values=[float(item[1]) for item in sorted_items],
     )
-
 
 class BM25SparseEncoder:
     """BM25 sparse encoder for chunks and query text."""
