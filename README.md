@@ -119,6 +119,15 @@ docker run -p 6333:6333 qdrant/qdrant
 uv run uvicorn main:app --reload
 ```
 
+### 4b) Run the API Service (`api_service`)
+
+Make sure you are in the correct folder first, then run `uvicorn`:
+
+```bash
+cd api_service/src/api
+uv run uvicorn main:app --reload --port 8001
+```
+
 ### 5) Run Inngest Dev Server
 
 In a separate terminal, start Inngest and point it to your local FastAPI handler:
