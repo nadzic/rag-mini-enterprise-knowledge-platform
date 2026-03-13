@@ -2,13 +2,12 @@ import sys
 from pathlib import Path
 
 from fastapi import APIRouter, FastAPI
+from api.routes import health, rag
 
 # Allow api_service to import shared project modules (e.g. `services`).
 REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
-
-from api.routes import health, rag
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
